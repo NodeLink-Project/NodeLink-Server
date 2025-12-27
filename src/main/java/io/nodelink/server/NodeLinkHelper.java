@@ -30,7 +30,9 @@ public class NodeLinkHelper {
         return INSTANCE;
     }
 
-    protected void INITIALIZE() {
+    public void INITIALIZE() {
+        NodeLink.getInstance().getUpdater().checkForUpdates();
+
         initTerminal();
     }
 
@@ -110,7 +112,6 @@ public class NodeLinkHelper {
 
         terminal.writer().println(GREEN + "  ● Status: " + RESET + YELLOW + PRODUCT + RESET);
         terminal.writer().println(GREEN + "  ● Version: " + RESET + Version.VERSION);
-        terminal.writer().println(GREEN + "  ● Memory: " + RESET + getMemoryUsage());
 
         int currentLine = logoHeight + 4;
         for (int i = currentLine; i < RESERVED_ROWS - 1; i++) {
@@ -119,12 +120,6 @@ public class NodeLinkHelper {
 
         terminal.writer().print(BLUE + "─".repeat(width) + RESET);
         terminal.flush();
-    }
-
-    private String getMemoryUsage() {
-        Runtime runtime = Runtime.getRuntime();
-        long used = (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024;
-        return used + " MB / " + (runtime.maxMemory() / 1024 / 1024) + " MB";
     }
 
     private int getPlainTextLength(String s) {

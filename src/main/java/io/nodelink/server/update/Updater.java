@@ -47,14 +47,15 @@ public class Updater {
     private String fetchVersion() {
         try {
             final String API_URL = "https://api.github.com/repos/NodeLink-Project/NodeLink-Server/tags";
+            final String TOKEN = "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";
 
-            //final String authorizationHeader = "Bearer " + TOKEN;
+            final String authorizationHeader = "Bearer " + TOKEN;
             Thread.sleep(1000);
 
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))
-                    //.header("Authorization", authorizationHeader)
+                    .header("Authorization", authorizationHeader)
                     .GET()
                     .build();
 
@@ -87,6 +88,8 @@ public class Updater {
                 return true;
             } else {
                 NodeLink.getInstance().getLogger().INFO(NODELINK + "You are using the latest version: " + Version.VERSION);
+
+                NodeLink.getHelper().INITIALIZE();
             }
 
         } catch (Exception exception) {
@@ -161,12 +164,7 @@ public class Updater {
 
             Thread.sleep(2000);
 
-            if (process.isAlive()) {
-                Thread.sleep(1000);
-
-                System.out.println("New version is running successfully!");
-                System.exit(0);
-            } else {
+            if (!process.isAlive()) {
                 System.err.println("ERROR: New process exited with code: " + process.exitValue());
                 System.err.println("The new version failed to start. Check the output above.");
             }
