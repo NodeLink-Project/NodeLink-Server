@@ -1,0 +1,85 @@
+package io.nodelink.server.log;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class Logs {
+
+    /**
+     * Singleton instance of Logs
+     */
+    private static final Logs INSTANCE = new Logs();
+
+    /**
+     * Constructor of Logs
+     * This constructor is private to ensure that the class is a singleton.
+     */
+    private static String pathFile;
+
+    /**
+     * Make list for save logs in memory before writing to file.
+     * This buffer is used to store log messages temporarily before they are written to a file.
+     */
+    private static List<String> logBuffer = new ArrayList<>();
+
+    /**
+     * * Static block to initialize the Logs instance.
+     * This block is executed when the class is loaded, ensuring that the instance is created only once.
+     *
+     * @param logType The type of resource for which the logs are being created.
+     * @param <P>
+     * @param logText The text to be logged.
+     */
+    public <P> void MakeALog(String logText, P logType) {
+        try {
+            Date date = new Date();
+            SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String timestamp = timestampFormat.format(date);
+
+            StringBuilder logContent = new StringBuilder();
+            logContent.append("[").append(timestamp).append("] ");
+            logContent.append("[").append(logType.toString().toUpperCase()).append("] ");
+            logContent.append(logText).append("\n");
+
+            logBuffer.add(logContent.toString());
+
+            if (logType.toString().toUpperCase().equals("CRITICAL") || logType.toString().toUpperCase().equals("ERROR")) {
+                File directory = new File(pathFile, "logs");
+                if (!directory.exists()) {
+                    directory.mkdirs();
+                }
+
+                SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+                String dateTimeStr = fileNameFormat.format(date);
+                File file = new File(directory, "app_" + dateTimeStr + ".log");
+
+                try (FileWriter writer = new FileWriter(file)) {
+                    for (String logEntry : logBuffer) {
+                        writer.write(logEntry);
+                    }
+
+                    logBuffer.clear();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Get the singleton instance of Logs
+     *
+     * @return The singleton instance of Logs
+     */
+    public static Logs getLogsSingleton() {
+        return INSTANCE;
+    }
+}
