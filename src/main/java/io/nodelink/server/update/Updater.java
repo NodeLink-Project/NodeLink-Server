@@ -89,7 +89,7 @@ public class Updater {
             } else {
                 NodeLink.getInstance().getLogger().INFO(NODELINK + "You are using the latest version: " + Version.VERSION);
 
-                NodeLink.getHelper().INITIALIZE();
+                //NodeLink.getHelper().INITIALIZE();
             }
 
         } catch (Exception exception) {
@@ -167,6 +167,8 @@ public class Updater {
             if (!process.isAlive()) {
                 System.err.println("ERROR: New process exited with code: " + process.exitValue());
                 System.err.println("The new version failed to start. Check the output above.");
+            } else {
+                System.exit(1);
             }
 
         } catch (Exception exception) {
