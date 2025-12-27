@@ -74,7 +74,7 @@ public class NodeLinkHelper {
                     break;
                 }
             }
-        } catch (Exception _) {}
+        } catch (Exception e) {}
     }
 
     private void fullClearAndRefresh(Terminal terminal) {
