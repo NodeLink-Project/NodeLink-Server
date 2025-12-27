@@ -1,5 +1,8 @@
 package io.nodelink.server.log;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
 public class Logger {
 
     /**
@@ -13,67 +16,48 @@ public class Logger {
     private final Logs logs = Logs.getLogsSingleton();
 
     /**
-     * Method to display an informational message in the console.
-     * This method prints the message in green color if showLogs is enabled,
-     * and always logs it to file.
-     *
-     * @param msg The message to log
+     * Formatter for time in HH:mm:ss format
      */
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    private static final String RESET = "\u001B[0m";
+    private static final String GREEN = "\u001B[32m";
+    private static final String YELLOW = "\u001B[33m";
+    private static final String RED = "\u001B[31m";
+    private static final String MAGENTA = "\u001B[35m";
+    private static final String CYAN = "\u001B[36m";
+
+    private void printLog(String level, String msg, String levelColor, String msgColor) {
+        String time = LocalTime.now().format(TIME_FORMATTER);
+
+        String formattedLine = String.format("%s%s %s[%s] %s%s%s",
+                GREEN, time, levelColor, level, msgColor, msg, RESET);
+
+        System.out.println(formattedLine);
+
+        if (logs != null) {
+            logs.MakeALog(msg, level);
+        }
+    }
+
     public void INFO(String msg) {
-        // Green
-        String INFO = "\u001B[32m[INFO] \u001B[0m";
-        System.out.println(INFO + msg);
-
-        logs.MakeALog(msg, "INFO");
+        printLog("INFOS", msg, GREEN, CYAN);
     }
 
-    /**
-     * Method to display a warning message in the console.
-     * This method prints the message in yellow color if showLogs is enabled,
-     * and always logs it to file.
-     *
-     * @param msg The message to log
-     */
     public void WARN(String msg) {
-
-        // Yellow
-        String WARN = "\u001B[33m[WARN] \u001B[0m";
-        System.out.println(WARN + msg);
-
-        logs.MakeALog(msg, "WARN");
+        printLog("WARN", msg, YELLOW, YELLOW);
     }
 
-    /**
-     * Method to display an error message in the console.
-     * This method prints the message in red color if showLogs is enabled,
-     * and always logs it to file.
-     *
-     * @param msg The message to log
-     */
     public void ERROR(String msg) {
-
-        // Red
-        String ERROR = "\u001B[31m[ERROR] \u001B[0m";
-        System.out.println(ERROR + msg);
-
-        logs.MakeALog(msg, "ERROR");
+        printLog("ERROR", msg, RED, RED);
     }
 
-    /**
-     * Method to display a critical message in the console.
-     * This method prints the message in magenta color if showLogs is enabled,
-     * and always logs it to file.
-     *
-     * @param msg The message to log
-     */
     public void CRITICAL(String msg) {
+        printLog("CRITICAL", msg, MAGENTA, MAGENTA);
+    }
 
-        // Magenta
-        String CRITICAL = "\u001B[35m[CRITICAL] \u001B[0m";
-        System.out.println(CRITICAL + msg);
-
-
-        logs.MakeALog(msg, "CRITICAL");
+    public void SUCCESS(String msg) {
+        printLog("INFOS", msg, GREEN, GREEN);
     }
 
     /**

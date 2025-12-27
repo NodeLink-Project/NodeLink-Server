@@ -7,6 +7,11 @@ plugins {
 
 application {
     mainClass = 'io.nodelink.server.NodeLink'
+    applicationDefaultJvmArgs = ["--enable-native-access=ALL-UNNAMED"]
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += "--enable-native-access=ALL-UNNAMED"
 }
 
 task generateVersionClass {

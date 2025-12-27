@@ -9,7 +9,7 @@ public class NodeLink extends NodeLinkHelper {
 
     private static final NodeLink INSTANCE = new NodeLink();
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         try {
             for (int i = 0; i < args.length; i++) {
                 if ("--delete-old".equals(args[i]) && (i + 1) < args.length) {
