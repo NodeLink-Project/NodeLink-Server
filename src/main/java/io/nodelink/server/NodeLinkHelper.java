@@ -31,8 +31,6 @@ public class NodeLinkHelper {
     }
 
     public void INITIALIZE() {
-        NodeLink.getInstance().getUpdater().checkForUpdates();
-
         initTerminal();
     }
 
@@ -57,7 +55,7 @@ public class NodeLinkHelper {
                 try {
                     String command = reader.readLine(prompt);
 
-                    if (command == null || command.equalsIgnoreCase("exit")) break;
+                    if (command == null || command.equalsIgnoreCase("exit")) System.exit(1);
 
                     if (command.equalsIgnoreCase("clear")) {
                         fullClearAndRefresh(terminal);

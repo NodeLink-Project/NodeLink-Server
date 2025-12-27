@@ -11,6 +11,8 @@ public class NodeLink extends NodeLinkHelper {
 
     static void main(String[] args) {
         try {
+            NodeLink.getInstance().getUpdater().checkForUpdates();
+
             for (int i = 0; i < args.length; i++) {
                 if ("--delete-old".equals(args[i]) && (i + 1) < args.length) {
                     String oldJarPath = args[i + 1];
