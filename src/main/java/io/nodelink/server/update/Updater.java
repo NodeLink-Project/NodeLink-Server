@@ -3,10 +3,10 @@ package io.nodelink.server.update;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import io.nodelink.server.NodeLink;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
@@ -14,170 +14,110 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 
 public class Updater {
 
     private static final Updater INSTANCE = new Updater();
-
-    public void checkForUpdates() {
-        try {
-            NodeLink.getInstance().getLogger().INFO("\u001B[94m[NodeLink] \u001B[0mChecking for updates...");
-
-            Thread.sleep(1000);
-
-            Class<?> classReference = Updater.class;
-
-            URL url = classReference.getProtectionDomain().getCodeSource().getLocation();
-
-            Path filePath = Paths.get(url.toURI());
-            Path FolderParent = filePath.getParent();
-
-            if (isLatestVersion()) {
-                downloadFile("https://raw.githubusercontent.com/NodeLink-Project/nodelink-project.github.io/main/nodelink-server/jar/io/nodelink/server/NodeLink-Server/" + fetchVersion() + "/NodeLink-Server-" + fetchVersion() + "-fat.jar", FolderParent.toString() + "/NodeLink-Server-" + fetchVersion() + ".jar");
-                removeAndStartNewVersion();
-            }
-
-        } catch (Exception exception) {
-            NodeLink.getInstance().getLogger().ERROR(exception.getMessage());
-        }
-    }
-
-    private String fetchVersion() {
-        try {
-            final String API_URL = "https://api.github.com/repos/NodeLink-Project/NodeLink-Server/tags";
-
-
-            //final String authorizationHeader = "Bearer " + TOKEN;
-            Thread.sleep(1000);
-
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(API_URL))
-                    //.header("Authorization", authorizationHeader)
-                    .GET()
-                    .build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            Gson gson = new Gson();
-            JsonArray data = gson.fromJson(response.body(), JsonArray.class);
-
-            if (data != null && !data.isEmpty()) {
-                return data.get(0).getAsJsonObject().get("name").getAsString();
-            } else {
-                return "No tags found";
-            }
-
-        } catch (Exception exception) {
-            NodeLink.getInstance().getLogger().ERROR(exception.getMessage());
-            return "Error";
-        }
-    }
-
-    private boolean isLatestVersion() {
-        try {
-            String NODELINK = "\u001B[94m[NodeLink] \u001B[0m";
-            String fetchedVersion = fetchVersion();
-
-            if (!fetchedVersion.equals(Version.VERSION)) {
-                NodeLink.getInstance().getLogger().INFO(NODELINK + "A new version is available: " + fetchedVersion + " (You are using " + Version.VERSION + ")");
-                Thread.sleep(1000);
-
-                return true;
-            } else {
-                NodeLink.getInstance().getLogger().INFO(NODELINK + "You are using the latest version: " + Version.VERSION);
-
-                //NodeLink.getHelper().INITIALIZE();
-            }
-
-        } catch (Exception exception) {
-            NodeLink.getInstance().getLogger().ERROR(exception.getMessage());
-        }
-        return false;
-    }
-
-    private void downloadFile(String urlStr, String filePath) {
-        try {
-            Thread.sleep(1000);
-
-            URL url = new URL(urlStr);
-
-            try (ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-                 FileOutputStream fos = new FileOutputStream(filePath)) {
-
-                long bytesTransferred = fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-
-                fos.flush();
-                fos.getFD().sync();
-
-                System.out.println("Downloaded " + bytesTransferred + " bytes to " + filePath);
-            }
-
-            Thread.sleep(500);
-
-            File downloadedFile = new File(filePath);
-            if (!downloadedFile.exists() || downloadedFile.length() == 0) {
-                throw new IOException("Download failed: file is missing or empty");
-            }
-
-            System.out.println("File downloaded successfully: " + downloadedFile.length() + " bytes");
-
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            NodeLink.getInstance().getLogger().ERROR("Download error: " + exception.getMessage());
-
-            File file = new File(filePath);
-            if (file.exists()) {
-                file.delete();
-            }
-        }
-    }
-
-    private void removeAndStartNewVersion() {
-        try {
-            Thread.sleep(1000);
-
-            Class<?> classReference = Updater.class;
-
-            URL url = classReference.getProtectionDomain().getCodeSource().getLocation();
-
-            Path filePath = Paths.get(url.toURI());
-            Path FolderParent = filePath.getParent();
-
-            File LOCAL_JAR = new File(FolderParent.toString() + "/NodeLink-Server-" + Version.VERSION + ".jar");
-            String newJarPath = FolderParent + "/NodeLink-Server-" + fetchVersion() + ".jar";
-
-            ProcessBuilder pb = new ProcessBuilder(
-                    "java",
-                    "-jar",
-                    newJarPath,
-                    "--delete-old",
-                    LOCAL_JAR.getAbsolutePath()
-            );
-
-            pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-
-            Process process = pb.start();
-
-            Thread.sleep(2000);
-
-            if (!process.isAlive()) {
-                System.err.println("ERROR: New process exited with code: " + process.exitValue());
-                System.err.println("The new version failed to start. Check the output above.");
-            } else {
-                System.exit(1);
-            }
-
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            NodeLink.getInstance().getLogger().ERROR(exception.getMessage());
-        }
-    }
+    private final String PREFIX = "\u001B[94m[NodeLink] \u001B[0m";
 
     public static Updater getUpdaterSingleton() {
         return INSTANCE;
     }
+
+    public void handleArguments(String[] args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equalsIgnoreCase("--delete-old") && (i + 1) < args.length) {
+                try {
+                    Path oldPath = Paths.get(args[i + 1]);
+                    // On attend un peu que l'ancien OS libère le verrou sur le fichier
+                    Thread.sleep(1500);
+                    if (Files.exists(oldPath)) {
+                        Files.delete(oldPath);
+                        System.out.println(PREFIX + "Cleanup: Old version deleted.");
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    public Mono<Void> checkForUpdates() {
+        return fetchVersionMono()
+                .flatMap(latest -> {
+                    if (latest.equals(Version.VERSION)) {
+                        System.out.println(PREFIX + "Latest version: " + Version.VERSION);
+                        NodeLink.getHelper().INITIALIZE();
+                        return Mono.empty();
+                    }
+                    return prepareAndDownload(latest).flatMap(this::launchNewProcess);
+                })
+                .doOnError(e -> {
+                    System.err.println("Update failed: " + e.getMessage());
+                    NodeLink.getHelper().INITIALIZE();
+                });
+    }
+
+    private Mono<String> fetchVersionMono() {
+        return Mono.fromCallable(() -> {
+            System.out.println(PREFIX + "Checking updates...");
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.github.com/repos/NodeLink-Project/NodeLink-Server/tags"))
+                    .GET().build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonArray data = new Gson().fromJson(response.body(), JsonArray.class);
+            return (data != null && !data.isEmpty()) ? data.get(0).getAsJsonObject().get("name").getAsString() : Version.VERSION;
+        }).subscribeOn(Schedulers.boundedElastic()).onErrorReturn(Version.VERSION);
+    }
+
+    private Mono<UpdateContext> prepareAndDownload(String latestVersion) {
+        return Mono.fromCallable(() -> {
+            System.out.println(PREFIX + "Downloading: " + latestVersion);
+            URL url = Updater.class.getProtectionDomain().getCodeSource().getLocation();
+            Path currentJarPath = Paths.get(url.toURI());
+            Path folder = currentJarPath.getParent();
+            Path newJarPath = folder.resolve("NodeLink-Server-" + latestVersion + ".jar");
+
+            String downloadUrl = "https://raw.githubusercontent.com/NodeLink-Project/nodelink-project.github.io/main/nodelink-server/jar/io/nodelink/server/NodeLink-Server/"
+                    + latestVersion + "/NodeLink-Server-" + latestVersion + "-fat.jar";
+
+            try (ReadableByteChannel rbc = Channels.newChannel(new URL(downloadUrl).openStream());
+                 FileOutputStream fos = new FileOutputStream(newJarPath.toFile())) {
+                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            }
+            return new UpdateContext(currentJarPath.toAbsolutePath().toString(), newJarPath.toAbsolutePath().toString());
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private Mono<Void> launchNewProcess(UpdateContext ctx) {
+        return Mono.fromRunnable(() -> {
+            try {
+                System.out.println(PREFIX + "Starting new version...");
+                String javaBin = ProcessHandle.current().info().command().orElse("java");
+
+                ProcessBuilder pb = new ProcessBuilder(javaBin, "-jar", ctx.newJar, "--delete-old", ctx.oldJar);
+                pb.inheritIO();
+
+                // On démarre le processus
+                pb.start();
+
+                // On laisse un délai pour que le nouveau processus s'imprime à l'écran
+                // avant de tuer brutalement celui-ci.
+                Thread.sleep(1000);
+                System.out.println(PREFIX + "Update complete. Goodbye!");
+                System.exit(0);
+            } catch (Exception e) {
+                e.printStackTrace();
+                NodeLink.getHelper().INITIALIZE();
+            }
+        });
+    }
+
+    private record UpdateContext(String oldJar, String newJar) {}
 }

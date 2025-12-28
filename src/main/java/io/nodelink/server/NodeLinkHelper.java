@@ -99,11 +99,15 @@ public class NodeLinkHelper {
 
         int logoHeight = logoLines.length;
         for (int i = 0; i < logoHeight; i++) {
-            String leftPart = (i >= 12 && (i - 12) < headerLines.length) ? BLUE + headerLines[i - 12] + RESET : "";
+
+            String leftPart = (i >= 10 && (i - 10) < headerLines.length) ? BLUE + headerLines[i - 10] + RESET : "";
             String rightPart = logoLines[i];
 
-            int padding = width - getPlainTextLength(leftPart) - getPlainTextLength(rightPart);
-            if (padding < 0) padding = 0;
+            int leftLen = getPlainTextLength(leftPart);
+            int rightLen = getPlainTextLength(rightPart);
+
+            int padding = width - leftLen - rightLen;
+            if (padding < 1) padding = 1;
 
             terminal.writer().println(leftPart + " ".repeat(padding) + rightPart);
         }
