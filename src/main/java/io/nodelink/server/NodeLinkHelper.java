@@ -1,14 +1,20 @@
 package io.nodelink.server;
 
+import io.nodelink.server.command.CommandDispatcher;
+import io.nodelink.server.command.CommandLogics;
+import io.nodelink.server.command.CommandRegistry;
+import io.nodelink.server.command.TabCompleter;
+import io.nodelink.server.enums.CommandsEnum;
 import io.nodelink.server.update.Version;
-import org.jline.reader.EndOfFileException;
-import org.jline.reader.UserInterruptException;
+
+import org.jline.reader.*;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
 import org.jline.utils.InfoCmp.Capability;
+
 import java.nio.file.Paths;
+
+import java.util.List;
 
 public class NodeLinkHelper {
 
@@ -21,8 +27,23 @@ public class NodeLinkHelper {
     private static final String WHITE = "\u001B[37m";
     private static final String YELLOW = "\u001B[33m";
 
-    private static String STATUS = "Main";
+
     private static String PRODUCT = "Post Production";
+
+    private Terminal terminal;
+
+    private String STATUS = "OFFLINE";
+
+    public synchronized void updateStatus(String newStatus) {
+        this.STATUS = (newStatus == null) ? "" : newStatus;
+        if (this.terminal != null) {
+            fullClearAndRefresh(this.terminal);
+        }
+    }
+
+    public synchronized String getStatus() {
+        return this.STATUS;
+    }
 
     private static final int RESERVED_ROWS = 36;
 
@@ -36,13 +57,29 @@ public class NodeLinkHelper {
 
     private void initTerminal() {
         try {
-            Terminal terminal = TerminalBuilder.builder()
+            terminal = TerminalBuilder.builder()
                     .name("NodeLink Server")
                     .system(true)
                     .build();
 
+            CommandRegistry registry = new CommandRegistry();
+            registry.registerParentEnum(CommandsEnum.class);
+
+            TabCompleter appCompleter = new TabCompleter(registry);
+
+            CommandDispatcher dispatcher = new CommandDispatcher(registry);
+
+            CommandLogics logics = new CommandLogics(dispatcher, terminal);
+
             LineReader reader = LineReaderBuilder.builder()
                     .terminal(terminal)
+                    .completer((lineReader, parsedLine, candidates) -> {
+                        String buffer = parsedLine.line();
+                        List<String> suggestions = appCompleter.complete(buffer);
+                        for (String s : suggestions) {
+                            candidates.add(new Candidate(s));
+                        }
+                    })
                     .variable(LineReader.HISTORY_FILE, Paths.get("bin/history.txt"))
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
                     .build();
@@ -55,26 +92,28 @@ public class NodeLinkHelper {
                 try {
                     String command = reader.readLine(prompt);
 
-                    if (command == null || command.equalsIgnoreCase("exit")) System.exit(1);
+                    if (command == null || command.equalsIgnoreCase("exit" ) || command.equalsIgnoreCase("quit")) {
+                        System.exit(1);
+                    }
 
                     if (command.equalsIgnoreCase("clear")) {
                         fullClearAndRefresh(terminal);
                         continue;
                     }
 
-                    if (command.equalsIgnoreCase("wow")) {
-                        STATUS = "Wow Mode";
-                        fullClearAndRefresh(terminal);
-                        continue;
+                    boolean handled = dispatcher.dispatch(command);
+                    if (!handled) {
+                        terminal.writer().println("Commande inconnue : " + command);
+                        terminal.flush();
                     }
 
-                    terminal.writer().println("Exécution de : " + command);
-
                 } catch (UserInterruptException | EndOfFileException e) {
-                    break;
+                    System.exit(1);
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void fullClearAndRefresh(Terminal terminal) {
@@ -164,12 +203,12 @@ public class NodeLinkHelper {
 
     private String HEADER() {
         return """
-                 __  __       __                        ____          __            ______       ____          __  __       ______  \s
-                /\\ \\/\\ \\     /\\ \\                      /\\  _`\\       /\\ \\          /\\__  _\\     /\\  _`\\       /\\ \\/\\ \\     /\\__  _\\ \s
-                \\ \\ `\\\\ \\    \\ \\ \\                     \\ \\ \\/\\_\\     \\ \\ \\         \\/_/\\ \\/     \\ \\ \\L\\_\\     \\ \\ `\\\\ \\    \\/_/\\ \\/ \s
-                 \\ \\ , ` \\    \\ \\ \\  __     _______     \\ \\ \\/_/_     \\ \\ \\  __       \\ \\ \\      \\ \\  _\\L      \\ \\ , ` \\      \\ \\ \\ \s
-                  \\ \\ \\`\\ \\    \\ \\ \\L\\ \\   /\\______\\     \\ \\ \\L\\ \\     \\ \\ \\L\\ \\       \\_\\ \\__    \\ \\ \\L\\ \\     \\ \\ \\`\\ \\      \\ \\ \\\s
-                   \\ \\_\\ \\_\\    \\ \\____/   \\/______/      \\ \\____/      \\ \\____/       /\\_____\\    \\ \\____/      \\ \\_\\ \\_\\      \\ \\_\\
-                    \\/_/\\/_/     \\/___/                    \\/___/        \\/___/        \\/_____/     \\/___/        \\/_/\\/_/       \\/_/""";
+                 __  __       __                        ____         ____          ____         __  __        ____          ____      \s
+                /\\ \\/\\ \\     /\\ \\                      /\\  _`\\      /\\  _`\\       /\\  _`\\      /\\ \\/\\ \\      /\\  _`\\       /\\  _`\\    \s
+                \\ \\ `\\\\ \\    \\ \\ \\                     \\ \\,\\L\\_\\    \\ \\ \\L\\_\\     \\ \\ \\L\\ \\    \\ \\ \\ \\ \\     \\ \\ \\L\\_\\     \\ \\ \\L\\ \\  \s
+                 \\ \\ , ` \\    \\ \\ \\  __     _______     \\/_\\__ \\     \\ \\  _\\L      \\ \\ ,  /     \\ \\ \\ \\ \\     \\ \\  _\\L      \\ \\ ,  /  \s
+                  \\ \\ \\`\\ \\    \\ \\ \\L\\ \\   /\\______\\      /\\ \\L\\ \\    \\ \\ \\L\\ \\     \\ \\ \\\\ \\     \\ \\ \\_/ \\     \\ \\ \\L\\ \\     \\ \\ \\\\ \\ \s
+                   \\ \\_\\ \\_\\    \\ \\____/   \\/______/      \\ `\\____\\    \\ \\____/      \\ \\_\\ \\_\\    \\ `\\___/      \\ \\____/      \\ \\_\\ \\_\\
+                    \\/_/\\/_/     \\/___/                    \\/_____/     \\/___/        \\/_/\\/ /     `\\/__/        \\/___/        \\/_/\\/ /""";
     }
 }
