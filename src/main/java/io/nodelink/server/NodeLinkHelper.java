@@ -10,9 +10,8 @@ import io.nodelink.server.update.Version;
 import org.jline.reader.*;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.utils.InfoCmp;
 import org.jline.utils.InfoCmp.Capability;
-
-import java.nio.file.Paths;
 
 import java.util.List;
 
@@ -28,7 +27,11 @@ public class NodeLinkHelper {
     private static final String YELLOW = "\u001B[33m";
 
 
-    private static String PRODUCT = "Post Production";
+    private final String PRODUCT = "Post Production";
+
+    public synchronized String getPRODUCT() {
+        return this.PRODUCT;
+    }
 
     private Terminal terminal;
 
@@ -69,8 +72,6 @@ public class NodeLinkHelper {
 
             CommandDispatcher dispatcher = new CommandDispatcher(registry);
 
-            CommandLogics logics = new CommandLogics(dispatcher, terminal);
-
             LineReader reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .completer((lineReader, parsedLine, candidates) -> {
@@ -80,35 +81,54 @@ public class NodeLinkHelper {
                             candidates.add(new Candidate(s));
                         }
                     })
-                    .variable(LineReader.HISTORY_FILE, Paths.get("bin/history.txt"))
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
                     .build();
+
+            CommandLogics logics = new CommandLogics(dispatcher, reader, terminal);
 
             fullClearAndRefresh(terminal);
 
             while (true) {
-                String prompt = GREEN + "Server" + RESET + "@" + YELLOW + "NodeLink" + RESET + "-(" + RED + STATUS + RESET + ")~" + WHITE + "$ " + RESET;
+                String prompt = GREEN + "Server" + RESET + "@" + YELLOW + "NodeLink" + RESET + "-(" + RED + NodeLink.getHelper().getStatus() + RESET + ")~" + WHITE + "$ " + RESET;
 
                 try {
                     String command = reader.readLine(prompt);
 
-                    if (command == null || command.equalsIgnoreCase("exit" ) || command.equalsIgnoreCase("quit")) {
-                        System.exit(1);
-                    }
-
-                    if (command.equalsIgnoreCase("clear")) {
-                        fullClearAndRefresh(terminal);
+                    if (command == null || command.trim().isEmpty()) {
                         continue;
                     }
 
-                    boolean handled = dispatcher.dispatch(command);
-                    if (!handled) {
-                        terminal.writer().println("Commande inconnue : " + command);
+                    try {
+                        boolean handled = dispatcher.dispatch(command);
+
+                        if (!handled) {
+                            terminal.writer().println("Commande inconnue : " + command);
+                            terminal.writer().println("\n");
+                        }
+                    } catch (Exception e) {
+                        terminal.writer().println("Erreur : La commande '" + command + "' n'est pas reconnue.");
+                        terminal.writer().println("\n");
+                    }
+
+                    terminal.writer().flush();
+
+                    if (command.equalsIgnoreCase("exit") || command.equalsIgnoreCase("quit")) {
+                        terminal.writer().print("\u001B[r");
+                        terminal.writer().print("\u001B[2J\u001B[3J");
+                        terminal.puts(InfoCmp.Capability.cursor_address, 0, 0);
                         terminal.flush();
+                        System.exit(0);
                     }
 
                 } catch (UserInterruptException | EndOfFileException e) {
-                    System.exit(1);
+                    terminal.writer().print("\u001B[r");
+                    terminal.writer().print("\u001B[2J\u001B[3J");
+                    terminal.puts(InfoCmp.Capability.cursor_address, 0, 0);
+                    terminal.flush();
+                    System.exit(0);
+                } catch (Exception e) {
+                    terminal.writer().println("Une erreur système est survenue : " + e.getMessage());
+                    terminal.writer().flush();
                 }
             }
         } catch (Exception e) {
@@ -116,7 +136,7 @@ public class NodeLinkHelper {
         }
     }
 
-    private void fullClearAndRefresh(Terminal terminal) {
+    public void fullClearAndRefresh(Terminal terminal) {
         terminal.writer().print("\u001B[r");
         terminal.writer().print("\u001B[2J\u001B[3J");
         terminal.puts(Capability.cursor_address, 0, 0);
@@ -165,6 +185,10 @@ public class NodeLinkHelper {
 
     private int getPlainTextLength(String s) {
         return s.replaceAll("\u001B\\[[;\\d]*m", "").length();
+    }
+
+    public void displayHelpPage() {
+
     }
 
     private String LOGO() {

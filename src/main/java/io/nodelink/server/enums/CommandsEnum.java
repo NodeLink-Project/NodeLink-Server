@@ -4,19 +4,54 @@ import io.nodelink.server.command.CommandNode;
 import io.nodelink.server.provider.CommandsProvider;
 
 public enum CommandsEnum implements CommandsProvider {
+    CLEAR {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode clear = new CommandNode("clear");
+
+            clear.setOwner(this);
+            return clear;
+        }
+    },
+
+    HELP {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode help = new CommandNode("help");
+
+            help.setOwner(this);
+            return help;
+        }
+    },
+
     SERVICE {
         @Override
         public CommandNode getCommandNode() {
             CommandNode service = new CommandNode("service");
             CommandNode set = new CommandNode("set");
+            CommandNode mode = new CommandNode("mode");
 
-            set.addChild(new CommandNode("status"));
-            set.addChild(new CommandNode("info"));
-
+            CommandNode info = new CommandNode("info");
+            CommandNode status = new CommandNode("status");
 
             service.addChild(set);
+            set.addChild(mode);
+
+            mode.addChild(info);
+            mode.addChild(status);
 
             return service;
+        }
+    },
+
+    SERVICE_MODE_STATUS {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode mode = root.child("mode");
+            CommandNode status = mode.child("status");
+            status.setOwner(this);
+            return root;
         }
     },
 

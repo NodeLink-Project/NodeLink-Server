@@ -47,8 +47,7 @@ public class Updater {
     private String fetchVersion() {
         try {
             final String API_URL = "https://api.github.com/repos/NodeLink-Project/NodeLink-Server/tags";
-
-            final String TOKEN = "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";
+            final String TOKEN = "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";
 
             final String authorizationHeader = "Bearer " + TOKEN;
             Thread.sleep(1000);
