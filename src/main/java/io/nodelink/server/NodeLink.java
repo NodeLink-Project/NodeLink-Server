@@ -1,8 +1,9 @@
 package io.nodelink.server;
 
-import io.nodelink.server.app.node.api.NodeStarter;
+import io.nodelink.server.app.node.NodeStarter;
 import io.nodelink.server.log.Logger;
 import io.nodelink.server.update.Updater;
+import io.nodelink.server.utils.StoreData;
 
 import java.io.File;
 
@@ -55,6 +56,10 @@ public class NodeLink extends NodeLinkHelper {
 
     public NodeStarter getNodeStarter() {
         return NodeStarter.getNodeStarterSingleton();
+    }
+
+    public StoreData getStoreData() {
+        return StoreData.getStoreDataSingleton();
     }
 
 }

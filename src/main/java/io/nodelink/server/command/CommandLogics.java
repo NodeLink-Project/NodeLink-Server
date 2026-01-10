@@ -1,9 +1,12 @@
 package io.nodelink.server.command;
 
 import io.nodelink.server.NodeLink;
+import io.nodelink.server.app.data.BONE_LOCATION;
+import io.nodelink.server.app.data.CLUSTER_LOCATION;
 import io.nodelink.server.enums.CommandsEnum;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
+import org.w3c.dom.Node;
 
 public class CommandLogics {
 
@@ -24,12 +27,14 @@ public class CommandLogics {
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_CLUSTER, tokens -> {
             NodeLink.getHelper().updateStatus("Cluster");
+            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().WHICH_TYPE, true);
 
             terminal.writer().println("Mode cluster activé");
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_BONE, tokens -> {
             NodeLink.getHelper().updateStatus("Bone");
+            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().WHICH_TYPE, false);
 
             NodeLink.getInstance().getNodeStarter().startServer();
         });
@@ -38,6 +43,36 @@ public class CommandLogics {
 
 
             terminal.writer().println("Spring Boot arrêté");
+        });
+
+        dispatcher.registerHandler(CommandsEnum.SERVICE_SET_BONE_LOCATION, tokens -> {
+            if (tokens.length < 5) {
+                terminal.writer().println("Usage: service set bone location <location>");
+                return;
+            }
+
+            String locationInput = tokens[4].toUpperCase();
+            try {
+                BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(locationInput);
+                terminal.writer().println("Emplacement du bone défini sur : " + boneLocation.name());
+            } catch (IllegalArgumentException e) {
+                terminal.writer().println("Emplacement invalide. Veuillez choisir parmi les emplacements disponibles.");
+            }
+        });
+
+        dispatcher.registerHandler(CommandsEnum.SERVICE_SET_CLUSTER_LOCATION, tokens -> {
+            if (tokens.length < 5) {
+                terminal.writer().println("Usage: service set cluster location <location>");
+                return;
+            }
+
+            String locationInput = tokens[4].toUpperCase();
+            try {
+                CLUSTER_LOCATION clusterLocation = CLUSTER_LOCATION.valueOf(locationInput);
+                terminal.writer().println("Emplacement du cluster défini sur : " + clusterLocation.name());
+            } catch (IllegalArgumentException e) {
+                terminal.writer().println("Emplacement invalide. Veuillez choisir parmi les emplacements disponibles.");
+            }
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_MODE_STATUS, tokens -> {

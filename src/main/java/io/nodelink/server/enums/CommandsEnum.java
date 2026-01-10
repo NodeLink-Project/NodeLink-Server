@@ -1,7 +1,11 @@
 package io.nodelink.server.enums;
 
+import io.nodelink.server.NodeLink;
+import io.nodelink.server.app.data.BONE_LOCATION;
+import io.nodelink.server.app.data.CLUSTER_LOCATION;
 import io.nodelink.server.command.CommandNode;
 import io.nodelink.server.provider.CommandsProvider;
+import org.w3c.dom.Node;
 
 public enum CommandsEnum implements CommandsProvider {
     CLEAR {
@@ -33,6 +37,12 @@ public enum CommandsEnum implements CommandsProvider {
             CommandNode dev = new CommandNode("dev");
 
             CommandNode api = new CommandNode("api");
+
+            CommandNode cluster = new CommandNode("cluster");
+            CommandNode bone = new CommandNode("bone");
+
+            set.addChild(cluster);
+            set.addChild(bone);
 
             service.addChild(set);
             service.addChild(mode);
@@ -85,6 +95,42 @@ public enum CommandsEnum implements CommandsProvider {
             CommandNode set = root.child("set");
             CommandNode cluster = set.child("cluster");
             cluster.setOwner(this);
+            return root;
+        }
+    },
+
+    SERVICE_SET_CLUSTER_LOCATION {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode set = root.child("set");
+            CommandNode cluster = set.child("cluster");
+            CommandNode location = cluster.child("location");
+
+            for (CLUSTER_LOCATION clusterLocation : CLUSTER_LOCATION.values()) {
+                CommandNode locationNode = new CommandNode(clusterLocation.name());
+                locationNode.setOwner(this);
+                location.addChild(locationNode);
+            }
+
+            return root;
+        }
+    },
+
+    SERVICE_SET_BONE_LOCATION {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode set = root.child("set");
+            CommandNode bone = set.child("bone");
+            CommandNode location = bone.child("location");
+
+            for (BONE_LOCATION boneLocation : BONE_LOCATION.values()) {
+                CommandNode locationNode = new CommandNode(boneLocation.name());
+                locationNode.setOwner(this);
+                location.addChild(locationNode);
+            }
+
             return root;
         }
     },

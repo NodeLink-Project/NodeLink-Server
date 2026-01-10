@@ -1,4 +1,4 @@
-package io.nodelink.server.app.node.api;
+package io.nodelink.server.app.node;
 
 import io.javalin.Javalin;
 import io.nodelink.server.NodeLink;

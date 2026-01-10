@@ -174,6 +174,12 @@ public class NodeLinkHelper {
         terminal.writer().println(GREEN + "  ● Status: " + RESET + YELLOW + PRODUCT + RESET);
         terminal.writer().println(GREEN + "  ● Version: " + RESET + Version.VERSION);
 
+//        if ((boolean) NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE)) {
+//            terminal.writer().println(GREEN + "  ● Region: " + RESET + "Cluster");
+//        } else {
+//            terminal.writer().println(GREEN + "  ● LOCATION: " + RESET + "Bone");
+//        }
+
         int currentLine = logoHeight + 4;
         for (int i = currentLine; i < RESERVED_ROWS - 1; i++) {
             terminal.writer().println("");
