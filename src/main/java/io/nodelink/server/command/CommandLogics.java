@@ -32,7 +32,14 @@ public class CommandLogics {
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_BONE, tokens -> {
             NodeLink.getHelper().updateStatus("Bone");
 
-            terminal.writer().println("Mode bone activé");
+
+            blankSpace(terminal);
+        });
+
+        dispatcher.registerHandler(CommandsEnum.SERVICE_DEV_API_STOP, tokens -> {
+
+
+            terminal.writer().println("Spring Boot arrêté");
             blankSpace(terminal);
         });
 

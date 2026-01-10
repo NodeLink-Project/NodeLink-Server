@@ -30,15 +30,16 @@ public enum CommandsEnum implements CommandsProvider {
             CommandNode service = new CommandNode("service");
             CommandNode set = new CommandNode("set");
             CommandNode mode = new CommandNode("mode");
+            CommandNode dev = new CommandNode("dev");
 
-            CommandNode info = new CommandNode("info");
-            CommandNode status = new CommandNode("status");
+            CommandNode api = new CommandNode("api");
 
             service.addChild(set);
-            set.addChild(mode);
+            service.addChild(mode);
+            service.addChild(dev);
 
-            mode.addChild(info);
-            mode.addChild(status);
+
+            dev.addChild(api);
 
             return service;
         }
@@ -51,6 +52,17 @@ public enum CommandsEnum implements CommandsProvider {
             CommandNode mode = root.child("mode");
             CommandNode status = mode.child("status");
             status.setOwner(this);
+            return root;
+        }
+    },
+
+    SERVICE_MODE_INFO {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode mode = root.child("mode");
+            CommandNode info = mode.child("info");
+            info.setOwner(this);
             return root;
         }
     },
@@ -75,8 +87,19 @@ public enum CommandsEnum implements CommandsProvider {
             cluster.setOwner(this);
             return root;
         }
-    }
-    ;
+    },
+
+    SERVICE_DEV_API_STOP {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode dev = root.child("dev");
+            CommandNode api = dev.child("api");
+            CommandNode stop = api.child("stop");
+            stop.setOwner(this);
+            return root;
+        }
+    };
 
     @Override
     public abstract CommandNode getCommandNode();

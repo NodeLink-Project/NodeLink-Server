@@ -5,6 +5,12 @@ plugins {
     id 'maven-publish'
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
 application {
     mainClass = 'io.nodelink.server.NodeLink'
     applicationDefaultJvmArgs = ["--enable-native-access=ALL-UNNAMED"]
@@ -40,7 +46,6 @@ tasks.register('printVersion') {
 shadowJar {
     archiveClassifier.set('fat')
 
-
     manifest {
         attributes 'Main-Class': 'io.nodelink.server.NodeLink'
     }
@@ -65,7 +70,6 @@ dependencies {
     implementation 'io.projectreactor:reactor-core:3.8.1'
     implementation 'io.projectreactor.netty:reactor-netty-core'
     implementation 'io.projectreactor.netty:reactor-netty-http'
-    implementation 'org.springframework.boot:spring-boot-starter-webflux:3.2.2'
 }
 
 test {
