@@ -3,10 +3,6 @@ package io.nodelink.server.command;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Complète la dernière partie du buffer en se basant sur le registre.
- * buffer attendu : texte complet (tokens séparés par espace).
- */
 public class TabCompleter {
 
     private final CommandRegistry registry;
@@ -21,11 +17,9 @@ public class TabCompleter {
         String[] raw = trimmed.isEmpty() ? new String[0] : trimmed.split("\\s+");
         List<String> tokens = new ArrayList<>(Arrays.asList(raw));
 
-        // si buffer se termine par un espace, on propose les enfants du dernier token complet
         boolean trailingSpace = buffer.endsWith(" ");
 
         if (tokens.isEmpty()) {
-            // proposer toutes les racines
             return registry.getRoots().stream().map(CommandNode::getName).collect(Collectors.toList());
         }
 
@@ -37,10 +31,8 @@ public class TabCompleter {
                     .collect(Collectors.toList());
         }
 
-        // trouver noeud le plus profond pour les tokens complets (si trailingSpace, dernier token est une clé complète)
         List<String> forSearch = new ArrayList<>(tokens);
         if (!trailingSpace) {
-            // la dernière partie est un préfixe -> on ignore le dernier token pour la recherche de parent
             forSearch.remove(forSearch.size() - 1);
         }
 

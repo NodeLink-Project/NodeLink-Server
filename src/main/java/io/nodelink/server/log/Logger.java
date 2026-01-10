@@ -33,7 +33,7 @@ public class Logger {
         String formattedLine = String.format("%s%s %s[%s] %s%s%s",
                 GREEN, time, levelColor, level, msgColor, msg, RESET);
 
-        System.out.println(formattedLine);
+        System.out.println("\n" + formattedLine);
 
         if (logs != null) {
             logs.MakeALog(msg, level);
@@ -57,7 +57,7 @@ public class Logger {
     }
 
     public void SUCCESS(String msg) {
-        printLog("INFOS", msg, GREEN, GREEN);
+        printLog("SUCCESS", msg, GREEN, GREEN);
     }
 
     /**

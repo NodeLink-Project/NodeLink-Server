@@ -3,10 +3,6 @@ package io.nodelink.server.command;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Dispatcher simple : associe un Enum (handler key) à une action (Consumer<String[]>).
- * Lors de l'exécution, on trouve le noeud le plus profond et on invoque le handler enregistré pour son owner.
- */
 public class CommandDispatcher {
 
     private final CommandRegistry registry;

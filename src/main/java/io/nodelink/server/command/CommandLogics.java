@@ -26,21 +26,18 @@ public class CommandLogics {
             NodeLink.getHelper().updateStatus("Cluster");
 
             terminal.writer().println("Mode cluster activé");
-            blankSpace(terminal);
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_BONE, tokens -> {
             NodeLink.getHelper().updateStatus("Bone");
 
-
-            blankSpace(terminal);
+            NodeLink.getInstance().getNodeStarter().startServer();
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_DEV_API_STOP, tokens -> {
 
 
             terminal.writer().println("Spring Boot arrêté");
-            blankSpace(terminal);
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_MODE_STATUS, tokens -> {
@@ -49,7 +46,6 @@ public class CommandLogics {
 
             terminal.writer().println("Statut actuel : " + STATUS + " (" + PRODUCT + ")");
             terminal.writer().println("Opérationnel ? :" + " RED STATUS");
-            blankSpace(terminal);
         });
     }
 }

@@ -1,5 +1,6 @@
 package io.nodelink.server;
 
+import io.nodelink.server.app.node.api.NodeStarter;
 import io.nodelink.server.log.Logger;
 import io.nodelink.server.update.Updater;
 
@@ -50,6 +51,10 @@ public class NodeLink extends NodeLinkHelper {
 
     public Updater getUpdater() {
         return Updater.getUpdaterSingleton();
+    }
+
+    public NodeStarter getNodeStarter() {
+        return NodeStarter.getNodeStarterSingleton();
     }
 
 }
