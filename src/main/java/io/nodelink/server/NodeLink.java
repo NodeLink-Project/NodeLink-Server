@@ -1,5 +1,6 @@
 package io.nodelink.server;
 
+import io.nodelink.server.app.cluster.ClusterStarter;
 import io.nodelink.server.app.node.NodeStarter;
 import io.nodelink.server.log.Logger;
 import io.nodelink.server.update.Updater;
@@ -56,6 +57,10 @@ public class NodeLink extends NodeLinkHelper {
 
     public NodeStarter getNodeStarter() {
         return NodeStarter.getNodeStarterSingleton();
+    }
+
+    public ClusterStarter getClusterStarter() {
+        return ClusterStarter.getClusterStarterSingleton();
     }
 
     public StoreData getStoreData() {

@@ -29,12 +29,16 @@ public class CommandLogics {
             NodeLink.getHelper().updateStatus("Cluster");
             NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().WHICH_TYPE, true);
 
-            terminal.writer().println("Mode cluster activé");
+            NodeLink.getHelper().fullClearAndRefresh(terminal);
+
+            NodeLink.getInstance().getClusterStarter().startServer();
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_BONE, tokens -> {
             NodeLink.getHelper().updateStatus("Bone");
             NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().WHICH_TYPE, false);
+
+            NodeLink.getHelper().fullClearAndRefresh(terminal);
 
             NodeLink.getInstance().getNodeStarter().startServer();
         });
@@ -46,6 +50,13 @@ public class CommandLogics {
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_BONE_LOCATION, tokens -> {
+            Object value = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE);
+
+            if (value == null || (boolean) value) {
+                terminal.writer().println("Erreur : Mode Bone non activé");
+                return;
+            }
+
             if (tokens.length < 5) {
                 terminal.writer().println("Usage: service set bone location <location>");
                 return;
@@ -55,12 +66,20 @@ public class CommandLogics {
             try {
                 BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(locationInput);
                 terminal.writer().println("Emplacement du bone défini sur : " + boneLocation.name());
+                NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().BONE_LOCATION, boneLocation.name());
             } catch (IllegalArgumentException e) {
                 terminal.writer().println("Emplacement invalide. Veuillez choisir parmi les emplacements disponibles.");
             }
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_CLUSTER_LOCATION, tokens -> {
+            Object value = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE);
+
+            if (value == null || !(boolean) value) {
+                terminal.writer().println("Erreur : Mode cluster non activé");
+                return;
+            }
+
             if (tokens.length < 5) {
                 terminal.writer().println("Usage: service set cluster location <location>");
                 return;
@@ -70,6 +89,7 @@ public class CommandLogics {
             try {
                 CLUSTER_LOCATION clusterLocation = CLUSTER_LOCATION.valueOf(locationInput);
                 terminal.writer().println("Emplacement du cluster défini sur : " + clusterLocation.name());
+                NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().CLUSTER_LOCATION, clusterLocation.name());
             } catch (IllegalArgumentException e) {
                 terminal.writer().println("Emplacement invalide. Veuillez choisir parmi les emplacements disponibles.");
             }

@@ -9,6 +9,8 @@ public class StoreData {
     public final HashMap<String, Object> DATA = new HashMap<>();
 
     public final String WHICH_TYPE = "which_type";
+    public final String CLUSTER_LOCATION = "cluster_location";
+    public final String BONE_LOCATION = "bone_location";
 
     public void put(String key, Object value) {
         DATA.put(key, value);

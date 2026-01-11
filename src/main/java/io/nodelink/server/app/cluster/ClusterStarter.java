@@ -28,9 +28,9 @@ public class ClusterStarter {
                         config.router.contextPath = "/cluster";
                     }).start(8080);
 
-                    RouteHandler.registerAllRoutes(app, "io.nodelink.server.app.node.api.routes");
+                    RouteHandler.registerAllRoutes(app, "io.nodelink.server.app.cluster.api.routes");
 
-                    NodeLink.getInstance().getLogger().SUCCESS("Node API Server started");
+                    NodeLink.getInstance().getLogger().SUCCESS("Cluster API Server started");
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
@@ -40,7 +40,7 @@ public class ClusterStarter {
         return app;
     }
 
-    public static ClusterStarter getNodeStarterSingleton() {
+    public static ClusterStarter getClusterStarterSingleton() {
         return INSTANCE;
     }
 }

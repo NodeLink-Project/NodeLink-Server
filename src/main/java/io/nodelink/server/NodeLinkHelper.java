@@ -1,5 +1,7 @@
 package io.nodelink.server;
 
+import io.nodelink.server.app.data.BONE_LOCATION;
+import io.nodelink.server.app.data.CLUSTER_LOCATION;
 import io.nodelink.server.command.CommandDispatcher;
 import io.nodelink.server.command.CommandLogics;
 import io.nodelink.server.command.CommandRegistry;
@@ -95,6 +97,7 @@ public class NodeLinkHelper {
                     String command = reader.readLine(prompt);
 
                     if (command == null || command.trim().isEmpty()) {
+                        terminal.writer().println("\n");
                         continue;
                     }
 
@@ -103,11 +106,9 @@ public class NodeLinkHelper {
 
                         if (!handled) {
                             terminal.writer().println("Commande inconnue : " + command);
-                            terminal.writer().println("\n");
                         }
                     } catch (Exception e) {
                         terminal.writer().println("Erreur : La commande '" + command + "' n'est pas reconnue.");
-                        terminal.writer().println("\n");
                     }
 
                     terminal.writer().flush();
@@ -149,6 +150,43 @@ public class NodeLinkHelper {
         terminal.flush();
     }
 
+    private void updateLocationDisplay() {
+        Object value = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE);
+
+        if (value == null) {
+            terminal.writer().println(GREEN + "  ● Type: " + RESET + "Not set...");
+        } else if ((boolean) value) {
+            terminal.writer().println(GREEN + "  ● Type: " + RESET + "Cluster");
+        } else {
+            terminal.writer().println(GREEN + "  ● Type: " + RESET + "Bone");
+        }
+
+        if (value != null && (boolean) value) {
+            Object clusterLocationValue = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().CLUSTER_LOCATION);
+            if (clusterLocationValue != null) {
+                CLUSTER_LOCATION clusterLocation = CLUSTER_LOCATION.valueOf(clusterLocationValue.toString());
+
+                terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + clusterLocation.name() + " |" + " (" + "https://1." + clusterLocation.getLocation() + ".nodelinkapp.xyz" + ")");
+            } else {
+                terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + "Not set...");
+            }
+        } else if (value != null && !(boolean) value) {
+            Object boneLocationValue = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().BONE_LOCATION);
+            if (boneLocationValue != null) {
+                BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(boneLocationValue.toString());
+
+                terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + boneLocation.name() + " |" + " (" + "https://1." + boneLocation.getLocation() + ".nodelinkapp.xyz" + ")");
+            } else {
+                terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + "Not set...");
+            }
+        }
+
+        Object locationValue = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().CLUSTER_LOCATION);
+
+        terminal.writer().flush();
+    }
+
+
     private void drawStaticInterface(Terminal terminal) {
         terminal.puts(Capability.cursor_address, 0, 0);
 
@@ -174,11 +212,8 @@ public class NodeLinkHelper {
         terminal.writer().println(GREEN + "  ● Status: " + RESET + YELLOW + PRODUCT + RESET);
         terminal.writer().println(GREEN + "  ● Version: " + RESET + Version.VERSION);
 
-//        if ((boolean) NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE)) {
-//            terminal.writer().println(GREEN + "  ● Region: " + RESET + "Cluster");
-//        } else {
-//            terminal.writer().println(GREEN + "  ● LOCATION: " + RESET + "Bone");
-//        }
+        updateLocationDisplay();
+
 
         int currentLine = logoHeight + 4;
         for (int i = currentLine; i < RESERVED_ROWS - 1; i++) {
