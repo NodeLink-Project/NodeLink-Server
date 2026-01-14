@@ -2,7 +2,7 @@ package io.nodelink.server.app.node;
 
 import io.javalin.Javalin;
 import io.nodelink.server.NodeLink;
-import io.nodelink.server.app.config.RouteHandler;
+import io.nodelink.server.app.infra.RouteHandler;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;

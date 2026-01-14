@@ -1,4 +1,4 @@
-package io.nodelink.server.app.config;
+package io.nodelink.server.app.infra;
 
 import io.javalin.http.Context;
 
