@@ -24,7 +24,7 @@ public class RouteHandler {
                 if (route.enabled()) {
                     String pkg = routeClass.getPackageName();
                     String version = "v1";
-                    if (pkg.contains(".v2.")) version = "v2";
+                    //if (pkg.contains(".v2.")) version = "v2";
 
                     String fullPath = "/api/" + version + route.path();
                     HandlerType method = route.method();

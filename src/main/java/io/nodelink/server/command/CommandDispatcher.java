@@ -26,7 +26,11 @@ public class CommandDispatcher {
         if (owner == null) return false;
         Consumer<String[]> action = handlers.get(owner);
         if (action == null) return false;
-        action.accept(tokens.toArray(new String[0]));
+        try {
+            action.accept(tokens.toArray(new String[0]));
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'exécution de la commande", e);
+        }
         return true;
     }
 }

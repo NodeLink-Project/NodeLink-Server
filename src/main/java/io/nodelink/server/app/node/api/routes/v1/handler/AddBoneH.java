@@ -2,51 +2,76 @@ package io.nodelink.server.app.node.api.routes.v1.handler;
 
 import io.javalin.http.Context;
 import io.nodelink.server.app.data.BONE_LOCATION;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.nodelink.server.app.infra.ApiHandler;
 import io.nodelink.server.app.infra.DatabaseService;
-
-import java.util.Random;
+import java.time.Instant;
 
 public class AddBoneH implements ApiHandler {
     private final ObjectMapper mapper = new ObjectMapper();
-    private final Random random = new Random();
 
     @Override
     public void handle(Context ctx) throws Exception {
-        // 1. On lit le JSON (ex: { "location": "EUROPE_WEST", "url": "..." })
-        ObjectNode requestBody = (ObjectNode) mapper.readTree(ctx.body());
+        // 1. Lecture sécurisée du JSON
+        JsonNode requestBody = mapper.readTree(ctx.body());
 
-        // 2. Validation de la location via l'Enum
-        String locationName = requestBody.get("location").asText();
-        BONE_LOCATION boneLoc;
-        try {
-            boneLoc = BONE_LOCATION.valueOf(locationName);
-        } catch (IllegalArgumentException e) {
-            ctx.status(400).result("Erreur : La location '" + locationName + "' n'existe pas dans BONE_LOCATION.");
+        // Vérification si les champs indispensables sont présents
+        if (requestBody == null || !requestBody.has("id") || !requestBody.has("location")) {
+            ctx.status(400).result("Erreur : Les champs 'id' et 'location' sont obligatoires.");
             return;
         }
 
-        // 3. Génération de l'ID (B + random)
-        String boneId = "B" + random.nextInt(10000);
+        // 2. Récupération des données
+        String rawId = requestBody.get("id").asText();
+        String boneId = "B" + rawId;
 
-        // 4. Construction de l'objet Bone (Sans links)
+        // 3. Vérification des doublons dans SQLite
+        try {
+            if (DatabaseService.getTimestamp("BoneTable", boneId) != null) {
+                ctx.status(409).result("Erreur : Le Bone " + boneId + " existe déjà.");
+                return;
+            }
+        } catch (Exception e) {
+            // Si la table n'existe pas encore ou erreur SQL
+            System.err.println("Erreur SQL lors de la vérification : " + e.getMessage());
+        }
+
+        // 4. Validation de la location via l'Enum
+        String locationName = requestBody.get("location").asText();
+        BONE_LOCATION boneLoc;
+        try {
+            boneLoc = BONE_LOCATION.valueOf(locationName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            ctx.status(400).result("Erreur : Location '" + locationName + "' inconnue.");
+            return;
+        }
+
+        // 5. Construction de l'URL et des données
+        String subDomain = boneLoc.getLocation();
+        String finalUrl = String.format("http://%s.%s.nodelinkapp.xyz", rawId, subDomain);
+
         ObjectNode boneData = mapper.createObjectNode();
         boneData.put("id", boneId);
         boneData.put("type", "Bone");
         boneData.put("name", "Bone-" + boneLoc.getNameLocationBone());
-        boneData.put("url", requestBody.get("url").asText());
+        boneData.put("url", finalUrl);
 
-        // Coordonnées automatiques récupérées depuis l'Enum
         boneData.putArray("coords")
                 .add(boneLoc.getLatitude())
                 .add(boneLoc.getLongitude());
 
-        // 5. Sauvegarde dans la table BoneTable
-        DatabaseService.saveBone(boneId, boneData.toString());
+        // 6. Sauvegarde et Propagation Réseau
+        try {
+            String timestamp = Instant.now().toString();
+            DatabaseService.saveAndSync("BoneTable", boneId, boneData.toString(), timestamp, false);
 
-        // 6. Réponse
-        ctx.status(201).json(boneData);
+            System.out.println("[P2P] Nouveau Bone enregistré et propagé : " + boneId);
+            ctx.status(201).json(boneData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.status(500).result("Erreur interne lors de la sauvegarde : " + e.getMessage());
+        }
     }
 }

@@ -101,6 +101,8 @@ public class NodeLinkHelper {
                         continue;
                     }
 
+                    command = command.trim();
+
                     try {
                         boolean handled = dispatcher.dispatch(command);
 
@@ -166,7 +168,7 @@ public class NodeLinkHelper {
             if (clusterLocationValue != null) {
                 CLUSTER_LOCATION clusterLocation = CLUSTER_LOCATION.valueOf(clusterLocationValue.toString());
 
-                terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + clusterLocation.name() + " |" + " (" + "https://1." + clusterLocation.getLocation() + ".nodelinkapp.xyz" + ")");
+                terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + clusterLocation.name() + " |" + " (" + "https://." + clusterLocation.getLocationCluster() + ".nodelinkapp.xyz" + ")");
             } else {
                 terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + "Not set...");
             }
@@ -175,7 +177,7 @@ public class NodeLinkHelper {
             if (boneLocationValue != null) {
                 BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(boneLocationValue.toString());
 
-                terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + boneLocation.name() + " |" + " (" + "https://1." + boneLocation.getLocation() + ".nodelinkapp.xyz" + ")");
+                terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + boneLocation.name() + " |" + " (" + "https://." + boneLocation.getLocation() + ".nodelinkapp.xyz" + ")");
             } else {
                 terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + "Not set...");
             }

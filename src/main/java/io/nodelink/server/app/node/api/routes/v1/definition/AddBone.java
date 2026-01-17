@@ -7,7 +7,7 @@ import io.nodelink.server.app.node.api.routes.v1.handler.AddBoneH;
 
 public class AddBone implements RouteDefinition {
     @Override public HandlerType method() { return HandlerType.POST; }
-    @Override public String path() { return "/registerBone"; }
+    @Override public String path() { return "/addBone"; }
     @Override public boolean enabled() { return true; }
 
     @Override
