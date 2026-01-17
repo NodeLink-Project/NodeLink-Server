@@ -1,6 +1,7 @@
 package io.nodelink.server.app.cluster;
 
 import io.javalin.Javalin;
+import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.nodelink.server.NodeLink;
 import io.nodelink.server.app.infra.RouteHandler;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,10 @@ public class ClusterStarter {
                     app = Javalin.create(config -> {
                         config.showJavalinBanner = false;
                         config.router.contextPath = "/cluster";
+
+                        config.bundledPlugins.enableCors(cors -> {
+                            cors.addRule(CorsPluginConfig.CorsRule::anyHost);
+                        });
                     }).start(8080);
 
                     RouteHandler.registerAllRoutes(app, "io.nodelink.server.app.cluster.api.routes");

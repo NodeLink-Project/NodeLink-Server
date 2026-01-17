@@ -62,16 +62,21 @@ public class AddBoneH implements ApiHandler {
                 .add(boneLoc.getLatitude())
                 .add(boneLoc.getLongitude());
 
-        // 6. Sauvegarde et Propagation Réseau
+        // 6. SAUVEGARDE DANS SQLITE
         try {
-            String timestamp = Instant.now().toString();
-            DatabaseService.saveAndSync("BoneTable", boneId, boneData.toString(), timestamp, false);
+            // On convertit l'ObjectNode en String JSON pour le stockage
+            String jsonString = boneData.toString();
 
-            System.out.println("[P2P] Nouveau Bone enregistré et propagé : " + boneId);
+            // On appelle la méthode que nous avons créée dans DatabaseService
+            DatabaseService.saveBone(boneId, jsonString);
+
+            // 7. RÉPONSE AU CLIENT
+            System.out.println("[DB] Bone " + boneId + " enregistré avec succès.");
             ctx.status(201).json(boneData);
+
         } catch (Exception e) {
             e.printStackTrace();
-            ctx.status(500).result("Erreur interne lors de la sauvegarde : " + e.getMessage());
+            ctx.status(500).result("Erreur lors de la sauvegarde : " + e.getMessage());
         }
     }
 }

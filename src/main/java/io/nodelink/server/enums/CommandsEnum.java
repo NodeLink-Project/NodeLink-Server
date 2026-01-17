@@ -109,7 +109,13 @@ public enum CommandsEnum implements CommandsProvider {
 
             for (CLUSTER_LOCATION clusterLocation : CLUSTER_LOCATION.values()) {
                 CommandNode locationNode = new CommandNode(clusterLocation.name());
-                locationNode.setOwner(this);
+
+                for (BONE_LOCATION boneLocation : BONE_LOCATION.values()) {
+                    CommandNode boneNode = new CommandNode(boneLocation.name());
+                    boneNode.setOwner(this);
+                    locationNode.addChild(boneNode);
+                }
+
                 location.addChild(locationNode);
             }
 
@@ -143,6 +149,63 @@ public enum CommandsEnum implements CommandsProvider {
             CommandNode api = dev.child("api");
             CommandNode stop = api.child("stop");
             stop.setOwner(this);
+            return root;
+        }
+    },
+
+    SERVICE_DEV_PEER_ADD {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode dev = root.child("dev");
+            CommandNode peer = dev.child("peer");
+            CommandNode add = peer.child("add");
+
+            CommandNode boneType = add.child("BONE");
+            CommandNode clusterType = add.child("CLUSTER");
+
+            boneType.setOwner(this);
+            clusterType.setOwner(this);
+
+            return root;
+        }
+    },
+
+    SERVICE_DEV_PEER_LIST {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode dev = root.child("dev");
+            CommandNode peer = dev.child("peer");
+            CommandNode list = peer.child("list");
+
+            list.setOwner(this);
+            return root;
+        }
+    },
+
+    SERVICE_DEV_PEER_REMOVE {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode dev = root.child("dev");
+            CommandNode peer = dev.child("peer");
+            CommandNode remove = peer.child("remove");
+
+            remove.setOwner(this);
+            return root;
+        }
+    },
+
+    SERVICE_DEV_SYNC_START {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode dev = root.child("dev");
+            CommandNode sync = dev.child("sync");
+            CommandNode start = sync.child("start");
+
+            start.setOwner(this);
             return root;
         }
     };

@@ -1,8 +1,10 @@
 package io.nodelink.server.app.node;
 
 import io.javalin.Javalin;
+import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.nodelink.server.NodeLink;
 import io.nodelink.server.app.infra.RouteHandler;
+import io.nodelink.server.app.infra.handler.SyncH;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -26,6 +28,15 @@ public class NodeStarter {
                     app = Javalin.create(config -> {
                         config.showJavalinBanner = false;
                         config.router.contextPath = "/bone";
+
+                        config.bundledPlugins.enableCors(cors -> {
+                            cors.addRule(CorsPluginConfig.CorsRule::anyHost);
+                        });
+
+                        SyncH syncHandler = new SyncH();
+
+                        app.get("/api/v1/sync", syncHandler::handle);
+                        app.post("/api/v1/sync", syncHandler::handle);
                     }).start(8080);
 
                     RouteHandler.registerAllRoutes(app, "io.nodelink.server.app.node.api.routes");
