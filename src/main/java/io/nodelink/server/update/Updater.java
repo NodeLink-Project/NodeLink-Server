@@ -24,20 +24,23 @@ public class Updater {
     public void checkForUpdates() {
         try {
             NodeLink.getInstance().getLogger().INFO("\u001B[94m[NodeLink] \u001B[0mChecking for updates...");
+            NodeLink.getInstance().getLogger().INFO("\u001B[94m[NodeLink] \u001B[0mEn rainson de coût financier lié aux requêtes API GitHub, la vérification des mises à jour sont interrrompues jusqu'à nouvel ordre.");
 
-            Thread.sleep(1000);
+            Thread.sleep(2000);
 
-            Class<?> classReference = Updater.class;
+            NodeLink.getHelper().INITIALIZE();
 
-            URL url = classReference.getProtectionDomain().getCodeSource().getLocation();
-
-            Path filePath = Paths.get(url.toURI());
-            Path FolderParent = filePath.getParent();
-
-            if (isLatestVersion()) {
-                downloadFile("https://raw.githubusercontent.com/NodeLink-Project/nodelink-project.github.io/main/nodelink-server/jar/io/nodelink/server/NodeLink-Server/" + fetchVersion() + "/NodeLink-Server-" + fetchVersion() + "-fat.jar", FolderParent.toString() + "/NodeLink-Server-" + fetchVersion() + ".jar");
-                removeAndStartNewVersion();
-            }
+//            Class<?> classReference = Updater.class;
+//
+//            URL url = classReference.getProtectionDomain().getCodeSource().getLocation();
+//
+//            Path filePath = Paths.get(url.toURI());
+//            Path FolderParent = filePath.getParent();
+//
+//            if (isLatestVersion()) {
+//                downloadFile("https://raw.githubusercontent.com/NodeLink-Project/nodelink-project.github.io/main/nodelink-server/jar/io/nodelink/server/NodeLink-Server/" + fetchVersion() + "/NodeLink-Server-" + fetchVersion() + "-fat.jar", FolderParent.toString() + "/NodeLink-Server-" + fetchVersion() + ".jar");
+//                removeAndStartNewVersion();
+//            }
 
         } catch (Exception exception) {
             NodeLink.getInstance().getLogger().ERROR(exception.getMessage());
@@ -47,7 +50,7 @@ public class Updater {
     private String fetchVersion() {
         try {
             final String API_URL = "https://api.github.com/repos/NodeLink-Project/NodeLink-Server/tags";
-            final String TOKEN = "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";
+            final String TOKEN = "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";
 
             final String authorizationHeader = "Bearer " + TOKEN;
             Thread.sleep(1000);
