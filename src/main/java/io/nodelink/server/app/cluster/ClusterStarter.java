@@ -3,7 +3,9 @@ package io.nodelink.server.app.cluster;
 import io.javalin.Javalin;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.nodelink.server.NodeLink;
+import io.nodelink.server.app.infra.CONSTANT;
 import io.nodelink.server.app.infra.RouteHandler;
+import io.nodelink.server.app.infra.handler.SyncH;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -31,11 +33,16 @@ public class ClusterStarter {
                         config.bundledPlugins.enableCors(cors -> {
                             cors.addRule(CorsPluginConfig.CorsRule::anyHost);
                         });
-                    }).start(8080);
+                    }).start(CONSTANT.PORT_CLUSTER);
 
                     RouteHandler.registerAllRoutes(app, "io.nodelink.server.app.cluster.api.routes");
 
                     NodeLink.getInstance().getLogger().SUCCESS("Cluster API Server started");
+
+                    SyncH syncHandler = new SyncH();
+
+                    app.get("/api/v1/sync", syncHandler::handle);
+                    app.post("/api/v1/sync", syncHandler::handle);
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();

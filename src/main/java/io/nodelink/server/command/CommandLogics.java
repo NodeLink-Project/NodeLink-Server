@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nodelink.server.NodeLink;
 import io.nodelink.server.app.data.BONE_LOCATION;
 import io.nodelink.server.app.data.CLUSTER_LOCATION;
+import io.nodelink.server.app.infra.CONSTANT;
 import io.nodelink.server.app.infra.DatabaseService;
 import io.nodelink.server.app.infra.SyncEngine;
 import io.nodelink.server.enums.CommandsEnum;
@@ -90,7 +91,7 @@ public class CommandLogics {
                 terminal.writer().println("Emplacement du bone défini sur : " + boneLocation.name());
 
                 HttpRequest idRequest = HttpRequest.newBuilder()
-                                .uri(URI.create("http://localhost:8080/bone/api/v1/getId"))
+                                .uri(URI.create("http://localhost:" + CONSTANT.PORT_BONE + "/bone/api/v1/getId"))
                                         .GET()
                                                 .build();
 
@@ -98,7 +99,7 @@ public class CommandLogics {
                 int generatedId = mapper.readTree(idResponse.body()).get("id").asInt();
 
                 String location = boneLocation.name();
-                String finalUrl = String.format("http://%d." + boneLocation.getLocation() + ".nodelinkapp.xyz:8080", generatedId);
+                String finalUrl = String.format("http://%d." + boneLocation.getLocation() + ".nodelinkapp.xyz", generatedId);
 
                 String registrationJson = String.format(
                         "{\"id\": \"%d\", \"location\": \"%s\", \"url\": \"%s\"}",
@@ -108,7 +109,7 @@ public class CommandLogics {
                 );
 
                 HttpRequest registerReq = HttpRequest.newBuilder()
-                                .uri(URI.create("http://localhost:8080/bone/api/v1/addBone"))
+                                .uri(URI.create("http://localhost:" + CONSTANT.PORT_BONE + "/bone/api/v1/addBone"))
                                 .header("Content-Type", "application/json")
                                 .POST(HttpRequest.BodyPublishers.ofString(registrationJson))
                                 .build();
@@ -159,7 +160,7 @@ public class CommandLogics {
                 // --- PHASE 1 : Récupération de l'ID (SYNCHRONE) ---
                 // Vérifie bien si l'URL est /bone/ ou /cluster/ dans ton RouteHandler
                 HttpRequest idRequest = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/cluster/api/v1/getId"))
+                        .uri(URI.create("http://localhost:" + CONSTANT.PORT_CLUSTER + "/cluster/api/v1/getId"))
                         .GET()
                         .build();
 
@@ -184,7 +185,7 @@ public class CommandLogics {
                 );
 
                 HttpRequest registerReq = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:8080/cluster/api/v1/addCluster"))
+                        .uri(URI.create("http://localhost:" + CONSTANT.PORT_CLUSTER + "/cluster/api/v1/addCluster"))
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(registrationJson))
                         .build();

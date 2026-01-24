@@ -3,6 +3,7 @@ package io.nodelink.server.app.node;
 import io.javalin.Javalin;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 import io.nodelink.server.NodeLink;
+import io.nodelink.server.app.infra.CONSTANT;
 import io.nodelink.server.app.infra.RouteHandler;
 import io.nodelink.server.app.infra.handler.SyncH;
 import org.slf4j.LoggerFactory;
@@ -32,16 +33,16 @@ public class NodeStarter {
                         config.bundledPlugins.enableCors(cors -> {
                             cors.addRule(CorsPluginConfig.CorsRule::anyHost);
                         });
-
-                        SyncH syncHandler = new SyncH();
-
-                        app.get("/api/v1/sync", syncHandler::handle);
-                        app.post("/api/v1/sync", syncHandler::handle);
-                    }).start(8080);
+                    }).start(CONSTANT.PORT_BONE);
 
                     RouteHandler.registerAllRoutes(app, "io.nodelink.server.app.node.api.routes");
 
                     NodeLink.getInstance().getLogger().SUCCESS("Node API Server started");
+
+                    SyncH syncHandler = new SyncH();
+
+                    app.get("/api/v1/sync", syncHandler::handle);
+                    app.post("/api/v1/sync", syncHandler::handle);
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
