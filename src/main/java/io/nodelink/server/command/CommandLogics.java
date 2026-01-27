@@ -6,7 +6,6 @@ import io.nodelink.server.app.data.BONE_LOCATION;
 import io.nodelink.server.app.data.CLUSTER_LOCATION;
 import io.nodelink.server.app.infra.CONSTANT;
 import io.nodelink.server.app.infra.DatabaseService;
-import io.nodelink.server.app.infra.SyncEngine;
 import io.nodelink.server.enums.CommandsEnum;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
@@ -222,8 +221,8 @@ public class CommandLogics {
                 return;
             }
 
-            String type = cleanTokens.get(4).toUpperCase(); // BONE ou CLUSTER
-            String url = cleanTokens.get(5); // L'URL saisie
+            String type = cleanTokens.get(4).toUpperCase();
+            String url = cleanTokens.get(5);
 
             // Petite validation de l'URL
             if (!url.startsWith("http")) {
@@ -232,7 +231,6 @@ public class CommandLogics {
             }
 
             try {
-                // Enregistrement dans la table PeerTable de DatabaseService
                 DatabaseService.addPeer(url, type);
 
                 terminal.writer().println("------------------------------------------");
@@ -250,14 +248,9 @@ public class CommandLogics {
         dispatcher.registerHandler(CommandsEnum.SERVICE_DEV_SYNC_START, tokens -> {
             terminal.writer().println("[Sync] Initialisation de la synchronisation globale...");
 
-            // On lance la tâche en arrière-plan
             new Thread(() -> {
                 try {
-                    // Appel du moteur de synchronisation que nous avons créé
-                    SyncEngine.syncWithAllPeers();
 
-                    terminal.writer().println("\n[Sync] Terminé avec succès.");
-                    terminal.writer().println("Les tables BoneTable et ClusterTable sont à jour.");
                 } catch (Exception e) {
                     terminal.writer().println("\n[Erreur Sync] : " + e.getMessage());
                     e.printStackTrace();
@@ -267,7 +260,6 @@ public class CommandLogics {
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_DEV_PEER_LIST, tokens -> {
             try {
-                // Récupération des données (URL -> TYPE)
                 Map<String, String> peers = DatabaseService.getAllPeersWithType();
 
                 terminal.writer().println("\n" + "=".repeat(60));
@@ -278,7 +270,6 @@ public class CommandLogics {
                     terminal.writer().println(" Aucun peer enregistré.");
                 } else {
                     peers.forEach((url, type) -> {
-                        // On met de la couleur ou du style pour le type si besoin
                         terminal.writer().println(String.format(" %-30s | %-15s", url, type));
                     });
                 }
@@ -297,8 +288,6 @@ public class CommandLogics {
             List<String> cleanTokens = new ArrayList<>();
             for (String t : tokens) if (!t.trim().isEmpty()) cleanTokens.add(t.trim());
 
-            // Structure : service dev peer remove <URL>
-            // Index     : 0       1   2    3      4
             if (cleanTokens.size() < 5) {
                 terminal.writer().println("Usage: service dev peer remove <URL>");
                 terminal.writer().println("Exemple: service dev peer remove http://localhost:8081");
