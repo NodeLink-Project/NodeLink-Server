@@ -11,6 +11,9 @@ public class StoreData {
     public final String WHICH_TYPE = "which_type";
     public final String CLUSTER_LOCATION = "cluster_location";
     public final String BONE_LOCATION = "bone_location";
+    public final String FINAL_URL = "final_url";
+
+    // DATA FROM BONE
 
     public void put(String key, Object value) {
         DATA.put(key, value);

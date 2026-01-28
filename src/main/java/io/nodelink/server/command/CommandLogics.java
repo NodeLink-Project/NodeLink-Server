@@ -1,5 +1,7 @@
 package io.nodelink.server.command;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nodelink.server.NodeLink;
 import io.nodelink.server.app.data.BONE_LOCATION;
@@ -7,6 +9,7 @@ import io.nodelink.server.app.data.CLUSTER_LOCATION;
 import io.nodelink.server.app.infra.CONSTANT;
 import io.nodelink.server.app.infra.DatabaseService;
 import io.nodelink.server.enums.CommandsEnum;
+import io.nodelink.server.utils.StoreData;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 
@@ -57,12 +60,6 @@ public class CommandLogics {
             NodeLink.getInstance().getNodeStarter().startServer();
         });
 
-        dispatcher.registerHandler(CommandsEnum.SERVICE_DEV_API_STOP, tokens -> {
-
-
-            terminal.writer().println("Spring Boot arrêté");
-        });
-
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_BONE_LOCATION, tokens -> {
             List<String> cleanTokens = new ArrayList<>();
             for (String token : tokens) {
@@ -89,22 +86,9 @@ public class CommandLogics {
                 BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(locationInput);
                 terminal.writer().println("Emplacement du bone défini sur : " + boneLocation.name());
 
-                HttpRequest idRequest = HttpRequest.newBuilder()
-                                .uri(URI.create("http://localhost:" + CONSTANT.PORT_BONE + "/bone/api/v1/getId"))
-                                        .GET()
-                                                .build();
-
-                HttpResponse<String> idResponse = client.send(idRequest, HttpResponse.BodyHandlers.ofString());
-                int generatedId = mapper.readTree(idResponse.body()).get("id").asInt();
-
-                String location = boneLocation.name();
-                String finalUrl = String.format("http://%d." + boneLocation.getLocation() + ".nodelinkapp.xyz", generatedId);
-
                 String registrationJson = String.format(
-                        "{\"id\": \"%d\", \"location\": \"%s\", \"url\": \"%s\"}",
-                        generatedId,
-                        location,
-                        finalUrl
+                        "{\"boneType\": \"%s\"}",
+                        boneLocation.name()
                 );
 
                 HttpRequest registerReq = HttpRequest.newBuilder()
@@ -116,13 +100,21 @@ public class CommandLogics {
                 NodeLink.getHelper().fullClearAndRefresh(terminal);
 
                 client.sendAsync(registerReq, HttpResponse.BodyHandlers.ofString())
-                                .thenAccept(res -> System.out.println("Enregistrement du Bone : " + res.body()));
+                                .thenAccept(res -> {
+                                    JsonNode responseJson;
+
+                                    try {
+                                        responseJson = mapper.readTree(res.body());
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+
+                                    NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().FINAL_URL, responseJson.get("url").asText());
+                                });
 
                 NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().BONE_LOCATION, boneLocation.name());
             } catch (IllegalArgumentException e) {
                 terminal.writer().println("Emplacement invalide. Veuillez choisir parmi les emplacements disponibles.");
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
             }
         });
 
@@ -231,7 +223,6 @@ public class CommandLogics {
             }
 
             try {
-                DatabaseService.addPeer(url, type);
 
                 terminal.writer().println("------------------------------------------");
                 terminal.writer().println("Succès : Nouveau Peer enregistré !");
@@ -260,22 +251,11 @@ public class CommandLogics {
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_DEV_PEER_LIST, tokens -> {
             try {
-                Map<String, String> peers = DatabaseService.getAllPeersWithType();
 
                 terminal.writer().println("\n" + "=".repeat(60));
                 terminal.writer().println(String.format(" %-30s | %-15s", "URL DU PEER", "TYPE"));
                 terminal.writer().println("-".repeat(60));
 
-                if (peers.isEmpty()) {
-                    terminal.writer().println(" Aucun peer enregistré.");
-                } else {
-                    peers.forEach((url, type) -> {
-                        terminal.writer().println(String.format(" %-30s | %-15s", url, type));
-                    });
-                }
-
-                terminal.writer().println("=".repeat(60));
-                terminal.writer().println(" Total : " + peers.size() + " peer(s) configuré(s)");
                 terminal.writer().println();
 
             } catch (Exception e) {
@@ -296,18 +276,7 @@ public class CommandLogics {
 
             String urlToRemove = cleanTokens.get(4);
 
-            try {
-                boolean deleted = DatabaseService.removePeer(urlToRemove);
 
-                if (deleted) {
-                    terminal.writer().println("Succès : Le peer [" + urlToRemove + "] a été supprimé.");
-                } else {
-                    terminal.writer().println("Erreur : Aucun peer trouvé avec l'URL : " + urlToRemove);
-                    terminal.writer().println("Utilisez 'service dev peer list' pour vérifier les URLs exactes.");
-                }
-            } catch (Exception e) {
-                terminal.writer().println("Erreur SQL : " + e.getMessage());
-            }
         });
 
         dispatcher.registerHandler(CommandsEnum.SERVICE_MODE_STATUS, tokens -> {

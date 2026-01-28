@@ -141,18 +141,6 @@ public enum CommandsEnum implements CommandsProvider {
         }
     },
 
-    SERVICE_DEV_API_STOP {
-        @Override
-        public CommandNode getCommandNode() {
-            CommandNode root = new CommandNode("service");
-            CommandNode dev = root.child("dev");
-            CommandNode api = dev.child("api");
-            CommandNode stop = api.child("stop");
-            stop.setOwner(this);
-            return root;
-        }
-    },
-
     SERVICE_DEV_PEER_ADD {
         @Override
         public CommandNode getCommandNode() {
