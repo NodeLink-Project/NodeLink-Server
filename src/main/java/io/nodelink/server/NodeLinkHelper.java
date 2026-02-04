@@ -152,6 +152,18 @@ public class NodeLinkHelper {
         terminal.flush();
     }
 
+    private String getFinalURL() {
+        Object value = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE);
+
+        if (value == null) {
+            return "Not set...";
+        } else if ((boolean) value) {
+            return "Not available...";
+        } else {
+            return NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().URL_BONE).toString();
+        }
+    }
+
     private void updateLocationDisplay() {
         Object value = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE);
 
@@ -168,7 +180,7 @@ public class NodeLinkHelper {
             if (clusterLocationValue != null) {
                 CLUSTER_LOCATION clusterLocation = CLUSTER_LOCATION.valueOf(clusterLocationValue.toString());
 
-                terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + clusterLocation.name() + " |" + " (" + "https://." + clusterLocation.getLocationCluster() + ".nodelinkapp.xyz" + ")");
+                terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + clusterLocation.name() + " |" + " (" + getFinalURL() + ")");
             } else {
                 terminal.writer().println(GREEN + "  ● Cluster Region: " + RESET + "Not set...");
             }
@@ -177,7 +189,7 @@ public class NodeLinkHelper {
             if (boneLocationValue != null) {
                 BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(boneLocationValue.toString());
 
-                terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + boneLocation.name() + " |" + " (" + "https://." + boneLocation.getLocation() + ".nodelinkapp.xyz" + ")");
+                terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + boneLocation.name() + " |" + " (" + getFinalURL() + ")");
             } else {
                 terminal.writer().println(GREEN + "  ● Bone Location: " + RESET + "Not set...");
             }

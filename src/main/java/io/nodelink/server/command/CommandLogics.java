@@ -7,20 +7,16 @@ import io.nodelink.server.NodeLink;
 import io.nodelink.server.app.data.BONE_LOCATION;
 import io.nodelink.server.app.data.CLUSTER_LOCATION;
 import io.nodelink.server.app.infra.CONSTANT;
-import io.nodelink.server.app.infra.DatabaseService;
 import io.nodelink.server.enums.CommandsEnum;
-import io.nodelink.server.utils.StoreData;
 import org.jline.reader.LineReader;
 import org.jline.terminal.Terminal;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class CommandLogics {
 
@@ -92,27 +88,30 @@ public class CommandLogics {
                 );
 
                 HttpRequest registerReq = HttpRequest.newBuilder()
-                                .uri(URI.create("http://localhost:" + CONSTANT.PORT_BONE + "/bone/api/v1/addBone"))
-                                .header("Content-Type", "application/json")
-                                .POST(HttpRequest.BodyPublishers.ofString(registrationJson))
-                                .build();
-
-                NodeLink.getHelper().fullClearAndRefresh(terminal);
+                        .uri(URI.create("http://localhost:" + CONSTANT.PORT_BONE + "/bone/api/v1/addBone"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(registrationJson))
+                        .build();
 
                 client.sendAsync(registerReq, HttpResponse.BodyHandlers.ofString())
-                                .thenAccept(res -> {
-                                    JsonNode responseJson;
+                        .thenAccept(res -> {
+                            JsonNode responseJson;
 
-                                    try {
-                                        responseJson = mapper.readTree(res.body());
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                            try {
+                                responseJson = mapper.readTree(res.body());
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
 
-                                    NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().FINAL_URL, responseJson.get("url").asText());
-                                });
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().ID_BONE, responseJson.get("boneId").asText());
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().TYPE_BONE, responseJson.get("boneType").asText());
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().ID, responseJson.get("id").asText());
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().URL_BONE, responseJson.get("url").asText());
+                        });
 
                 NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().BONE_LOCATION, boneLocation.name());
+
+                NodeLink.getHelper().fullClearAndRefresh(terminal);
             } catch (IllegalArgumentException e) {
                 terminal.writer().println("Emplacement invalide. Veuillez choisir parmi les emplacements disponibles.");
             }
@@ -121,59 +120,42 @@ public class CommandLogics {
         dispatcher.registerHandler(CommandsEnum.SERVICE_SET_CLUSTER_LOCATION, tokens -> {
             List<String> cleanTokens = new ArrayList<>();
             for (String token : tokens) {
-                if (!token.trim().isEmpty()) cleanTokens.add(token.trim());
+                if (!token.trim().isEmpty()) {
+                    cleanTokens.add(token.trim());
+                }
             }
             String[] cleanedTokens = cleanTokens.toArray(new String[0]);
 
             Object value = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE);
 
-
-            if (value == null || !((boolean) value)) {
-                terminal.writer().println("Erreur : Mode Cluster non activé (Actuellement en mode Bone)");
+            if (value == null || !(boolean) value) {
+                terminal.writer().println("Erreur : Mode Cluster non activé");
                 return;
             }
 
             if (cleanedTokens.length < 6) {
-                terminal.writer().println("Usage: service set cluster location <location> <parent_bone>");
-                terminal.writer().println("Exemple: service set cluster location NBG_DE_EU_CLUSTER EUROPE_WEST");
+                terminal.writer().println("Usage: service set cluster location <locationCluster> <locationBone>");
                 return;
             }
 
-            String locationInput = cleanedTokens[4].toUpperCase();
-            String parentBoneInput = cleanedTokens[5].toUpperCase();
-
+            String oneArgument = cleanedTokens[4].toUpperCase();
+            String twoArgument = cleanedTokens[5].toUpperCase();
+            System.out.println(oneArgument);
+            System.out.println(twoArgument);
             try {
-                CLUSTER_LOCATION clusterLocation = CLUSTER_LOCATION.valueOf(locationInput);
-                BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(parentBoneInput);
+                CLUSTER_LOCATION clusterLocation = CLUSTER_LOCATION.valueOf(oneArgument);
+                terminal.writer().println("Emplacement du bone défini sur : " + clusterLocation.name());
 
-                terminal.writer().println("Initialisation du cluster sur : " + clusterLocation.name());
+                BONE_LOCATION boneLocation = BONE_LOCATION.valueOf(twoArgument);
 
-                // --- PHASE 1 : Récupération de l'ID (SYNCHRONE) ---
-                // Vérifie bien si l'URL est /bone/ ou /cluster/ dans ton RouteHandler
-                HttpRequest idRequest = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:" + CONSTANT.PORT_CLUSTER + "/cluster/api/v1/getId"))
-                        .GET()
-                        .build();
 
-                terminal.writer().println("Demande d'ID unique au serveur...");
-                HttpResponse<String> idResponse = client.send(idRequest, HttpResponse.BodyHandlers.ofString());
-
-                if (idResponse.statusCode() != 200) {
-                    terminal.writer().println("Erreur ID (" + idResponse.statusCode() + ") : " + idResponse.body());
-                    return;
-                }
-
-                int genId = mapper.readTree(idResponse.body()).get("id").asInt();
-                terminal.writer().println("ID reçu : " + genId);
-
-                System.out.println("LOCATION Cluster : " + clusterLocation.name());
-                System.out.println("Parent Bone : " + boneLocation);
-
-                // --- PHASE 2 : Enregistrement (SYNCHRONE) ---
                 String registrationJson = String.format(
-                        "{\"id\": \"%d\", \"location\": \"%s\", \"parentBone\": \"%s\", \"link\": \"NONE\"}",
-                        genId, clusterLocation.name(), boneLocation
+                        "{\"clusterType\":\"%s\", \"boneType\":\"%s\"}",
+                        clusterLocation.name(),
+                        boneLocation.name()
                 );
+
+                System.out.println(registrationJson);
 
                 HttpRequest registerReq = HttpRequest.newBuilder()
                         .uri(URI.create("http://localhost:" + CONSTANT.PORT_CLUSTER + "/cluster/api/v1/addCluster"))
@@ -181,22 +163,29 @@ public class CommandLogics {
                         .POST(HttpRequest.BodyPublishers.ofString(registrationJson))
                         .build();
 
-                terminal.writer().println("Enregistrement du cluster en cours...");
-                HttpResponse<String> res = client.send(registerReq, HttpResponse.BodyHandlers.ofString());
+                client.sendAsync(registerReq, HttpResponse.BodyHandlers.ofString())
+                        .thenAccept(res -> {
+                            JsonNode responseJson;
 
-                if (res.statusCode() == 201) {
-                    terminal.writer().println("Succès : Cluster enregistré et propagé !");
-                    terminal.writer().println("Détails : " + res.body());
-                    NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().CLUSTER_LOCATION, clusterLocation.name());
-                } else {
-                    terminal.writer().println("Erreur d'enregistrement (" + res.statusCode() + ") : " + res.body());
-                }
+                            try {
+                                responseJson = mapper.readTree(res.body());
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
 
+                            System.out.println(res.body());
+
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().ID_BONE, responseJson.get("boneId").asText());
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().TYPE_BONE, responseJson.get("boneType").asText());
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().ID, responseJson.get("id").asText());
+                            NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().URL_BONE, responseJson.get("url").asText());
+                        });
+
+                NodeLink.getInstance().getStoreData().put(NodeLink.getInstance().getStoreData().BONE_LOCATION, clusterLocation.name());
+
+//                NodeLink.getHelper().fullClearAndRefresh(terminal);
             } catch (IllegalArgumentException e) {
-                terminal.writer().println("Erreur : Emplacement invalide (Cluster ou Parent Bone).");
-            } catch (Exception e) {
-                terminal.writer().println("Erreur critique : " + e.getMessage());
-                e.printStackTrace();
+                terminal.writer().println("Emplacement invalide. Veuillez choisir parmi les emplacements disponibles.");
             }
         });
 
@@ -279,12 +268,22 @@ public class CommandLogics {
 
         });
 
-        dispatcher.registerHandler(CommandsEnum.SERVICE_MODE_STATUS, tokens -> {
-            String STATUS = NodeLink.getHelper().getStatus();
-            String PRODUCT = NodeLink.getHelper().getPRODUCT();
+        dispatcher.registerHandler(CommandsEnum.SERVICE_INFO_STATS, tokens -> {
+            terminal.writer().println("Affichage des stats...");
 
-            terminal.writer().println("Statut actuel : " + STATUS + " (" + PRODUCT + ")");
-            terminal.writer().println("Opérationnel ? :" + " RED STATUS");
+            Object value = NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().WHICH_TYPE);
+
+            if (value == null) {
+                terminal.writer().println("Type de nœud : Non défini");
+            } else if ((boolean) value) {
+                terminal.writer().println("Type de nœud : Cluster");
+            } else {
+                terminal.writer().println("Type de nœud : Bone");
+                terminal.writer().println("Bone ID    : " + NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().ID_BONE));
+                terminal.writer().println("Bone Type  : " + NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().TYPE_BONE));
+                terminal.writer().println("Bone URL   : " + NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().URL_BONE));
+                terminal.writer().println("ID  : " + NodeLink.getInstance().getStoreData().get(NodeLink.getInstance().getStoreData().ID));
+            }
         });
     }
 }

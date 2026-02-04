@@ -24,7 +24,7 @@ public class Updater {
     public void checkForUpdates() {
         try {
             NodeLink.getInstance().getLogger().INFO("\u001B[94m[NodeLink] \u001B[0mChecking for updates...");
-            NodeLink.getInstance().getLogger().INFO("\u001B[94m[NodeLink] \u001B[0mEn rainson de coût financier lié aux requêtes API GitHub, la vérification des mises à jour sont interrrompues jusqu'à nouvel ordre.");
+            NodeLink.getInstance().getLogger().INFO("\u001B[94m[NodeLink] \u001B[0mEn rainson de coûts lié aux requêtes API GitHub, la vérification des mises à jour sont interrrompues jusqu'à nouvel ordre.");
 
             Thread.sleep(2000);
 

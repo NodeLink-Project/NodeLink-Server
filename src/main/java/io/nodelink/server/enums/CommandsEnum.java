@@ -33,7 +33,7 @@ public enum CommandsEnum implements CommandsProvider {
         public CommandNode getCommandNode() {
             CommandNode service = new CommandNode("service");
             CommandNode set = new CommandNode("set");
-            CommandNode mode = new CommandNode("mode");
+            CommandNode info = new CommandNode("info");
             CommandNode dev = new CommandNode("dev");
 
             CommandNode api = new CommandNode("api");
@@ -45,35 +45,12 @@ public enum CommandsEnum implements CommandsProvider {
             set.addChild(bone);
 
             service.addChild(set);
-            service.addChild(mode);
             service.addChild(dev);
-
+            service.addChild(info);
 
             dev.addChild(api);
 
             return service;
-        }
-    },
-
-    SERVICE_MODE_STATUS {
-        @Override
-        public CommandNode getCommandNode() {
-            CommandNode root = new CommandNode("service");
-            CommandNode mode = root.child("mode");
-            CommandNode status = mode.child("status");
-            status.setOwner(this);
-            return root;
-        }
-    },
-
-    SERVICE_MODE_INFO {
-        @Override
-        public CommandNode getCommandNode() {
-            CommandNode root = new CommandNode("service");
-            CommandNode mode = root.child("mode");
-            CommandNode info = mode.child("info");
-            info.setOwner(this);
-            return root;
         }
     },
 
@@ -194,6 +171,18 @@ public enum CommandsEnum implements CommandsProvider {
             CommandNode start = sync.child("start");
 
             start.setOwner(this);
+            return root;
+        }
+    },
+
+    SERVICE_INFO_STATS {
+        @Override
+        public CommandNode getCommandNode() {
+            CommandNode root = new CommandNode("service");
+            CommandNode info = root.child("info");
+            CommandNode stats = info.child("stats");
+
+            stats.setOwner(this);
             return root;
         }
     };

@@ -63,7 +63,7 @@ public class AddBoneH implements ApiHandler {
 
             // Save to Database
         try {
-            DatabaseService.saveBone(boneId, boneData.toString());
+            DatabaseService.saveBone(boneId, boneData.toString(), boneType);
 
             System.out.println("[DB] Bone " + boneId + " saved to database.");
             ctx.status(201).json(boneData);
